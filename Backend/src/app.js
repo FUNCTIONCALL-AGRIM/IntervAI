@@ -12,24 +12,26 @@ const allowedOrigins = [
   "https://interv-ai-taupe.vercel.app"
 ];
 
-// ✅ FIXED CORS
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // allow Postman / server calls
+// ✅ FIXED CORS (clean + safe)
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true); // allow Postman / server calls
 
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
 
-    return callback(new Error("Not allowed by CORS"));
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
-// ✅ IMPORTANT: handle preflight requests
-app.options("*", cors());
+// ✅ FIX: Express v5 compatible preflight handling
+app.options("/*", cors());
 
 /* routes */
 const authRouter = require("./routes/auth.routes");
@@ -37,5 +39,10 @@ const interviewRouter = require("./routes/interview.routes");
 
 app.use("/api/auth", authRouter);
 app.use("/api/interview", interviewRouter);
+
+// ✅ OPTIONAL: fallback route (recommended)
+app.use("/*", (req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
 
 module.exports = app;

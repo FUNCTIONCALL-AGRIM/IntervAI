@@ -1,5 +1,8 @@
 const pdfParse = require("pdf-parse");
-const { generateInterviewReport, generateResumePdf } = require("../services/ai.service");
+const {
+  generateInterviewReport,
+  generateResumePdf,
+} = require("../services/ai.service");
 const interviewReportModel = require("../models/interviewReport.model");
 const mongoose = require("mongoose");
 
@@ -53,7 +56,6 @@ async function generateInterViewReportController(req, res) {
       message: "Interview report generated successfully.",
       interviewReport,
     });
-
   } catch (error) {
     console.error("🔥 INTERVIEW REPORT ERROR:", error);
 
@@ -92,7 +94,6 @@ async function getInterviewReportByIdController(req, res) {
       message: "Interview report fetched successfully.",
       interviewReport,
     });
-
   } catch (error) {
     console.error("🔥 FETCH REPORT ERROR:", error);
 
@@ -120,7 +121,6 @@ async function getAllInterviewReportsController(req, res) {
       message: "Interview reports fetched successfully.",
       interviewReports,
     });
-
   } catch (error) {
     console.error("🔥 FETCH ALL ERROR:", error);
 
@@ -147,7 +147,9 @@ async function generateResumePdfController(req, res) {
       });
     }
 
-    const interviewReport = await interviewReportModel.findById(interviewReportId);
+    const interviewReport = await interviewReportModel.findById(
+      interviewReportId
+    );
 
     if (!interviewReport) {
       return res.status(404).json({
@@ -157,9 +159,9 @@ async function generateResumePdfController(req, res) {
 
     const { resume, jobDescription, selfDescription } = interviewReport;
 
-    console.log("📄 Resume:", !!resume);
-    console.log("📄 Job Description:", !!jobDescription);
-    console.log("📄 Self Description:", !!selfDescription);
+    console.log("📄 Resume exists:", !!resume);
+    console.log("📄 Job Description exists:", !!jobDescription);
+    console.log("📄 Self Description exists:", !!selfDescription);
 
     // ✅ Validate required data
     if (!resume || !jobDescription || !selfDescription) {
@@ -177,9 +179,7 @@ async function generateResumePdfController(req, res) {
     });
 
     if (!pdfBuffer) {
-      return res.status(500).json({
-        message: "Failed to generate PDF",
-      });
+      throw new Error("PDF generation failed");
     }
 
     res.set({
@@ -188,7 +188,6 @@ async function generateResumePdfController(req, res) {
     });
 
     res.send(pdfBuffer);
-
   } catch (error) {
     console.error("🔥 PDF GENERATION ERROR:", error);
 

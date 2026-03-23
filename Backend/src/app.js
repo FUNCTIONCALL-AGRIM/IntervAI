@@ -14,7 +14,10 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    // allow requests with no origin (like Postman / mobile apps)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
@@ -22,6 +25,9 @@ app.use(cors({
   },
   credentials: true
 }));
+
+// 🔴 IMPORTANT: Handle preflight requests
+app.options("*", cors());
 
 /* require all the routes here */
 const authRouter = require("./routes/auth.routes");

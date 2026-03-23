@@ -12,18 +12,24 @@ const allowedOrigins = [
   "https://interv-ai-taupe.vercel.app"
 ];
 
+// ✅ FIXED CORS
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
+    if (!origin) return callback(null, true); // allow Postman / server calls
 
     if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
+      return callback(null, true);
     }
+
+    return callback(new Error("Not allowed by CORS"));
   },
-  credentials: true
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
+// ✅ IMPORTANT: handle preflight requests
+app.options("*", cors());
 
 /* routes */
 const authRouter = require("./routes/auth.routes");

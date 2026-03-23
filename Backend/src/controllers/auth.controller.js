@@ -4,13 +4,14 @@ const jwt = require("jsonwebtoken");
 const tokenBlacklistModel = require("../models/blacklist.model");
 
 /**
- * Common cookie options (VERY IMPORTANT 🔥)
+ * 🔥 Dynamic cookie config (IMPORTANT)
+ * Works for BOTH local + production
  */
-const cookieOptions = {
+const getCookieOptions = () => ({
   httpOnly: true,
-  secure: true,          // required for HTTPS (Render + Vercel)
-  sameSite: "none",      // required for cross-origin
-};
+  secure: process.env.NODE_ENV === "production", // only true in production
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+});
 
 /**
  * @name registerUserController
@@ -50,7 +51,7 @@ async function registerUserController(req, res) {
     );
 
     // ✅ FIXED COOKIE
-    res.cookie("token", token, cookieOptions);
+    res.cookie("token", token, getCookieOptions());
 
     res.status(201).json({
       message: "User registered successfully",
@@ -62,7 +63,7 @@ async function registerUserController(req, res) {
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("Register Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 }
@@ -103,7 +104,7 @@ async function loginUserController(req, res) {
     );
 
     // ✅ FIXED COOKIE
-    res.cookie("token", token, cookieOptions);
+    res.cookie("token", token, getCookieOptions());
 
     res.status(200).json({
       message: "User logged in successfully",
@@ -115,7 +116,7 @@ async function loginUserController(req, res) {
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("Login Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 }
@@ -131,15 +132,15 @@ async function logoutUserController(req, res) {
       await tokenBlacklistModel.create({ token });
     }
 
-    // ✅ FIXED CLEAR COOKIE
-    res.clearCookie("token", cookieOptions);
+    // ✅ CLEAR COOKIE PROPERLY
+    res.clearCookie("token", getCookieOptions());
 
     res.status(200).json({
       message: "User logged out successfully",
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("Logout Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 }
@@ -149,6 +150,12 @@ async function logoutUserController(req, res) {
  */
 async function getMeController(req, res) {
   try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+
     const user = await userModel.findById(req.user.id);
 
     if (!user) {
@@ -167,7 +174,7 @@ async function getMeController(req, res) {
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("GetMe Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 }

@@ -6,6 +6,8 @@ The platform allows users to **upload resumes, analyze job descriptions, detect 
 
 Built with **React, Node.js, JWT Authentication, Gemini AI, MongoDB, and Puppeteer**, this project demonstrates how **Generative AI can be integrated into real-world career preparation tools.**
 
+🌐 Live Demo: https://interv-ai-taupe.vercel.app
+
 ---
 
 # 🌟 Features

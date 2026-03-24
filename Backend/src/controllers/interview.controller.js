@@ -83,6 +83,71 @@ async function generateInterViewReportController(req, res) {
 }
 
 /**
+ * @description Get all interview reports
+ */
+async function getAllInterviewReportsController(req, res) {
+  try {
+    const interviewReports = await interviewReportModel
+      .find({ user: req.user.id })
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      message: "Interview reports fetched successfully.",
+      interviewReports,
+    });
+
+  } catch (error) {
+    console.error("🔥 FETCH ALL ERROR:", error);
+
+    return res.status(500).json({
+      message: "Server Error while fetching reports",
+      interviewReports: [],
+      error: error.message,
+    });
+  }
+}
+
+/**
+ * @description Get interview report by ID
+ */
+async function getInterviewReportByIdController(req, res) {
+  try {
+    const { interviewId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(interviewId)) {
+      return res.status(400).json({
+        message: "Invalid interview ID",
+      });
+    }
+
+    const interviewReport = await interviewReportModel.findOne({
+      _id: interviewId,
+      user: req.user.id,
+    });
+
+    if (!interviewReport) {
+      return res.status(404).json({
+        message: "Interview report not found.",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Interview report fetched successfully.",
+      interviewReport,
+    });
+
+  } catch (error) {
+    console.error("🔥 FETCH ONE ERROR:", error);
+
+    return res.status(500).json({
+      message: "Server Error while fetching report",
+      interviewReport: null,
+      error: error.message,
+    });
+  }
+}
+
+/**
  * @description Generate Resume PDF
  */
 async function generateResumePdfController(req, res) {
@@ -136,5 +201,7 @@ async function generateResumePdfController(req, res) {
 
 module.exports = {
   generateInterViewReportController,
+  getAllInterviewReportsController,
+  getInterviewReportByIdController,
   generateResumePdfController,
 };

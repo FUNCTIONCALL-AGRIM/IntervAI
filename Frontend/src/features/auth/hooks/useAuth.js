@@ -10,10 +10,16 @@ export const useAuth = () => {
     setLoading(true);
     try {
       const data = await login({ email, password });
-      setUser(data.user);
+
+      if (data?.user) {
+        setUser(data.user);
+      } else {
+        setUser(null);
+      }
+
     } catch (err) {
-      console.error(err.response?.data || err.message);
-      throw err;
+      console.error(err);
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -23,10 +29,14 @@ export const useAuth = () => {
     setLoading(true);
     try {
       const data = await register({ username, email, password });
-      setUser(data.user);
+
+      if (data?.user) {
+        setUser(data.user);
+      }
+
     } catch (err) {
-      console.error(err.response?.data || err.message);
-      throw err;
+      console.error(err);
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -38,8 +48,7 @@ export const useAuth = () => {
       await logout();
       setUser(null);
     } catch (err) {
-      console.error(err.response?.data || err.message);
-      throw err;
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -49,14 +58,16 @@ export const useAuth = () => {
     const getAndSetUser = async () => {
       try {
         const data = await getMe();
-        setUser(data.user);
-      } catch (err) {
-        if (err.response?.status === 401) {
-          setUser(null); // 🔥 important
-          console.log("User not logged in");
+
+        if (data && data.user) {
+          setUser(data.user);
         } else {
-          console.error(err);
+          setUser(null);
         }
+
+      } catch (err) {
+        console.log("User not logged in");
+        setUser(null);
       } finally {
         setLoading(false);
       }

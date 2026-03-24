@@ -1,5 +1,5 @@
-const pdf = require("pdf-parse");
-const pdfParse = (buffer) => pdf(buffer);
+const pdfParseModule = require("pdf-parse");
+const pdfParse = pdfParseModule.default || pdfParseModule;
 const {
   generateInterviewReport,
   generateResumePdf,

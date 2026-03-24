@@ -1,4 +1,5 @@
-const pdfParse = require("pdf-parse/lib/pdf-parse.js");
+const pdf = require("pdf-parse");
+const pdfParse = (buffer) => pdf(buffer);
 const {
   generateInterviewReport,
   generateResumePdf,

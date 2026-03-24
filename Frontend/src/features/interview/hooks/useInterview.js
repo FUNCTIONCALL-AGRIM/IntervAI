@@ -1,3 +1,13 @@
+import { useContext, useEffect } from "react";
+import { InterviewContext } from "../interview.context";
+import { useParams } from "react-router";
+import {
+  getAllInterviewReports,
+  generateInterviewReport,
+  getInterviewReportById,
+  generateResumePdf,
+} from "../services/interview.api";
+
 export const useInterview = () => {
   const context = useContext(InterviewContext);
   const { interviewId } = useParams();
@@ -64,7 +74,6 @@ export const useInterview = () => {
 
     try {
       const data = await getAllInterviewReports();
-
       setReports(data || []);
       return data;
 
@@ -79,6 +88,7 @@ export const useInterview = () => {
 
   const getResumePdf = async (interviewReportId) => {
     setLoading(true);
+
     try {
       const response = await generateResumePdf({ interviewReportId });
 

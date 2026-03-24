@@ -70,7 +70,16 @@ async function generateInterviewReport({ resume, selfDescription, jobDescription
 
   } catch (error) {
     console.error("🔥 INTERVIEW AI ERROR:", error);
-    throw error;
+
+    // ✅ Fallback (so app never breaks)
+    return {
+      matchScore: 50,
+      technicalQuestions: [],
+      behavioralQuestions: [],
+      skillGaps: [],
+      preparationPlan: [],
+      title: "Basic Interview Report (Fallback)",
+    };
   }
 }
 
@@ -83,7 +92,7 @@ async function generatePdfFromHtml(htmlContent) {
     console.log("🚀 Launching Puppeteer...");
 
     const browser = await puppeteer.launch({
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      args: chromium.args,
       executablePath: await chromium.executablePath(),
       headless: true,
     });
@@ -120,57 +129,89 @@ async function generatePdfFromHtml(htmlContent) {
 ========================= */
 
 async function generateResumePdf({ resume, selfDescription, jobDescription }) {
+  let html;
+
   try {
-    const resumePdfSchema = z.object({
-      html: z.string(),
-    });
-
-    const prompt = `
-      Generate a professional resume in HTML format.
-
-      Resume: ${resume}
-      Self Description: ${selfDescription}
-      Job Description: ${jobDescription}
-
-      Return JSON with only:
-      {
-        "html": "<complete HTML resume>"
-      }
-    `;
+    console.log("🤖 Calling Gemini for resume...");
 
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: zodToJsonSchema(resumePdfSchema),
-      },
+      contents: `
+        Generate a clean, modern, professional resume in HTML format.
+
+        Resume:
+        ${resume}
+
+        Self Description:
+        ${selfDescription}
+
+        Job Description:
+        ${jobDescription}
+
+        Return ONLY JSON:
+        { "html": "<complete HTML resume>" }
+      `,
     });
 
-    console.log("🤖 AI RAW RESPONSE:", response.text);
+    console.log("📦 RAW AI RESPONSE:", response.text);
 
-    let jsonContent;
+    let parsed;
 
     try {
-      jsonContent = JSON.parse(response.text);
+      parsed = JSON.parse(response.text);
     } catch (err) {
-      throw new Error("AI returned invalid JSON");
+      throw new Error("Invalid JSON from AI");
     }
 
-    if (!jsonContent || !jsonContent.html) {
-      throw new Error("AI did not return HTML content");
+    if (!parsed || !parsed.html) {
+      throw new Error("AI did not return HTML");
     }
 
-    console.log("📄 HTML generated successfully");
-
-    const pdfBuffer = await generatePdfFromHtml(jsonContent.html);
-
-    return pdfBuffer;
+    html = parsed.html;
 
   } catch (error) {
-    console.error("🔥 RESUME PDF ERROR:", error);
-    throw error;
+    console.error("⚠️ AI FAILED → USING FALLBACK:", error.message);
+
+    // ✅ FALLBACK HTML (VERY IMPORTANT)
+    html = `
+      <html>
+        <head>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              padding: 30px;
+              line-height: 1.6;
+            }
+            h1 {
+              text-align: center;
+              color: #333;
+            }
+            h2 {
+              border-bottom: 2px solid #eee;
+              padding-bottom: 5px;
+              margin-top: 20px;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Professional Resume</h1>
+
+          <h2>Profile</h2>
+          <p>${selfDescription}</p>
+
+          <h2>Experience & Skills</h2>
+          <p>${resume}</p>
+
+          <h2>Target Role</h2>
+          <p>${jobDescription}</p>
+        </body>
+      </html>
+    `;
   }
+
+  const pdfBuffer = await generatePdfFromHtml(html);
+
+  return pdfBuffer;
 }
 
 module.exports = {
